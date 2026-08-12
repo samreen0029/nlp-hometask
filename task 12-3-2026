@@ -1,0 +1,130 @@
+# 1. Import required libraries
+import pandas as pd
+import re
+import nltk
+
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import PorterStemmer
+
+
+# 2. Download required NLTK resources
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('punkt_tab')
+
+
+# 3. Load the IMDb 50K dataset
+df = pd.read_csv("IMDB Dataset.csv")
+
+print("Dataset loaded successfully!")
+print("Original Dataset Shape:", df.shape)
+
+print("\nFirst 5 Reviews:")
+print(df.head())
+
+
+# 4. Check missing values
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+
+# 5. Check duplicate reviews
+print("\nNumber of Duplicate Rows:")
+print(df.duplicated().sum())
+
+
+# 6. Remove duplicate reviews
+df = df.drop_duplicates()
+
+print("\nDataset Shape After Removing Duplicates:")
+print(df.shape)
+
+
+# 7. Create stopwords and stemmer
+stop_words = set(stopwords.words('english'))
+stemmer = PorterStemmer()
+
+
+# 8. Function to clean the reviews
+def clean_review(text):
+
+    # Convert text to lowercase
+    text = text.lower()
+
+    # Remove HTML tags
+    text = re.sub(r'<.*?>', '', text)
+
+    # Remove URLs
+    text = re.sub(r'https?://\S+|www\.\S+', '', text)
+
+    # Remove numbers
+    text = re.sub(r'\d+', '', text)
+
+    # Remove punctuation and special characters
+    text = re.sub(r'[^a-zA-Z\s]', '', text)
+
+    # Tokenize the review
+    tokens = word_tokenize(text)
+
+    # Remove stopwords
+    tokens = [word for word in tokens if word not in stop_words]
+
+    # Apply stemming
+    tokens = [stemmer.stem(word) for word in tokens]
+
+    # Join tokens back into a sentence
+    cleaned_text = ' '.join(tokens)
+
+    return cleaned_text
+
+
+# 9. Apply cleaning to all reviews
+print("\nCleaning reviews...")
+
+df['cleaned_review'] = df['review'].apply(clean_review)
+
+print("Cleaning completed successfully!")
+
+
+# 10. Compare original and cleaned reviews
+print("\n========================================")
+print("ORIGINAL VS CLEANED REVIEWS")
+print("========================================")
+
+print(df[['review', 'cleaned_review', 'sentiment']].head(10))
+
+
+# 11. Show one review separately
+print("\n========================================")
+print("SAMPLE REVIEW")
+print("========================================")
+
+print("\nOriginal Review:")
+print(df['review'].iloc[0])
+
+print("\nCleaned Review:")
+print(df['cleaned_review'].iloc[0])
+
+print("\nSentiment:")
+print(df['sentiment'].iloc[0])
+
+
+# 12. Display final dataset information
+print("\n========================================")
+print("FINAL DATASET")
+print("========================================")
+
+print("Final Dataset Shape:", df.shape)
+
+print("\nColumns:")
+print(df.columns.tolist())
+
+
+# 13. Save the preprocessed dataset
+df.to_csv("IMDB_Preprocessed.csv", index=False)
+
+print("\n========================================")
+print("SUCCESS!")
+print("========================================")
+print("Preprocessed dataset saved as: IMDB_Preprocessed.csv")
