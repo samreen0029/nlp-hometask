@@ -1,0 +1,132 @@
+# ============================================================
+# SEARCH QUERY SPELLING CORRECTOR
+# ============================================================
+
+import nltk
+from nltk.corpus import words
+from nltk.tokenize import word_tokenize
+from nltk.metrics import edit_distance
+
+# Download English vocabulary
+nltk.download('words')
+nltk.download('punkt')
+nltk.download('punkt_tab')
+
+
+# 1. Load the spelling-error corpus / vocabulary
+vocabulary = set(word.lower() for word in words.words())
+
+print("Vocabulary loaded successfully!")
+print("Number of words:", len(vocabulary))
+
+
+# 2. Function to find the closest matching word
+def get_correction(word):
+    
+    # If word is already correct, return it
+    if word.lower() in vocabulary:
+        return word
+    
+    # Find candidate words with similar length
+    candidates = [
+        w for w in vocabulary
+        if abs(len(w) - len(word)) <= 2
+    ]
+    
+    # Calculate edit distance
+    distances = [
+        (w, edit_distance(word.lower(), w))
+        for w in candidates
+    ]
+    
+    # Select word with minimum edit distance
+    if distances:
+        closest_word, min_distance = min(
+            distances,
+            key=lambda x: x[1]
+        )
+        return closest_word
+    
+    return word
+
+
+# 3. Accept user search query
+query = input("Enter your search query: ")
+
+
+# 4. Tokenize the query
+tokens = word_tokenize(query)
+
+
+# 5. Identify incorrect words
+incorrect_words = []
+
+for word in tokens:
+    if word.isalpha() and word.lower() not in vocabulary:
+        incorrect_words.append(word)
+
+
+# 6. Correct the incorrect words
+corrected_words = []
+
+for word in tokens:
+    
+    if word.isalpha() and word.lower() not in vocabulary:
+        corrected_word = get_correction(word)
+        corrected_words.append(corrected_word)
+    else:
+        corrected_words.append(word)
+
+
+# 7. Create the corrected query
+corrected_query = " ".join(corrected_words)
+
+
+# 8. Display the results
+print("\n======================================")
+print("SEARCH QUERY SPELLING CORRECTOR")
+print("======================================")
+
+print("\nOriginal Query:")
+print(query)
+
+print("\nIncorrect Words:")
+print(incorrect_words)
+
+print("\nSuggested Corrections:")
+
+for word in incorrect_words:
+    print(word, "->", get_correction(word))
+
+print("\nFinal Corrected Query:")
+print(corrected_query)
+
+
+# 9. Test the system with multiple spelling errors
+test_queries = [
+    "machne lerning cours",
+    "pythn programmng languge",
+    "artifical inteligence",
+    "data scince cours"
+]
+
+print("\n======================================")
+print("TESTING MULTIPLE SPELLING ERRORS")
+print("======================================")
+
+for test_query in test_queries:
+    
+    test_tokens = word_tokenize(test_query)
+    corrected = []
+    
+    for word in test_tokens:
+        
+        if word.isalpha() and word.lower() not in vocabulary:
+            corrected.append(get_correction(word))
+        else:
+            corrected.append(word)
+    
+    corrected_text = " ".join(corrected)
+    
+    print("\nOriginal :", test_query)
+    print("Corrected:", corrected_text)
